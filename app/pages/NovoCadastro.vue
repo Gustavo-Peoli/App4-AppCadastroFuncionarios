@@ -1,5 +1,9 @@
 <template>
-<template>
   <!-- Página em branco -->
 </template>
-</template>
+
+<script setup>
+definePageMeta({
+  middleware: 'auth'
+})
+</script>

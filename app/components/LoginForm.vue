@@ -36,11 +36,24 @@
           placeholder="Digite sua senha"
           class="mb-6"
         />
-        <AppButton class="w-full bg-gradient-to-r from-primary to-accent text-white shadow-md" :disabled="loading">
+        <AppButton 
+          type="submit" 
+          class="w-full bg-gradient-to-r from-primary to-accent text-white shadow-md" 
+          :disabled="loading"
+        >
           <span v-if="loading">Entrando...</span>
           <span v-else>Entrar</span>
         </AppButton>
-        <div v-if="error" class="text-red-600 text-sm mt-2 text-center">{{ error }}</div>
+        
+        <!-- Exibir erro de validação ou erro do Supabase -->
+        <div v-if="validationError || error" class="text-red-600 text-sm mt-2 text-center">
+          {{ validationError || error }}
+        </div>
+        
+        <!-- Mensagem de sucesso (opcional) -->
+        <div v-if="!loading && !validationError && !error && login.email && login.password" class="text-green-600 text-sm mt-2 text-center hidden">
+          Login realizado com sucesso!
+        </div>
       </div>
       <div v-else>
   <h2 class="text-xl font-bold text-center mb-6 text-text">Criar nova conta</h2>
@@ -92,7 +105,58 @@ const register = ref({
 
 const { login: loginAction, loading, error } = useAuth()
 
+// Estado local para validação
+const validationError = ref('')
+
+// Função para validar email
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+// Função para validar os campos
+const validateLogin = () => {
+  validationError.value = ''
+  
+  if (!login.value.email.trim()) {
+    validationError.value = 'Por favor, digite seu e-mail'
+    return false
+  }
+  
+  if (!isValidEmail(login.value.email)) {
+    validationError.value = 'Por favor, digite um e-mail válido'
+    return false
+  }
+  
+  if (!login.value.password.trim()) {
+    validationError.value = 'Por favor, digite sua senha'
+    return false
+  }
+  
+  if (login.value.password.length < 6) {
+    validationError.value = 'A senha deve ter pelo menos 6 caracteres'
+    return false
+  }
+  
+  return true
+}
+
 const handleLogin = async () => {
-  await loginAction(login.value.email, login.value.password)
+  // Limpar erros anteriores
+  validationError.value = ''
+  
+  // Validar campos
+  if (!validateLogin()) {
+    return
+  }
+  
+  // Tentar fazer login
+  const result = await loginAction(login.value.email, login.value.password)
+  
+  // Se houve sucesso no login, redirecionar para a página inicial
+  if (result.user) {
+    console.log('Login realizado com sucesso!')
+    await navigateTo('/')
+  }
 }
 </script>

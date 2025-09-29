@@ -24,7 +24,8 @@ package.json       # Dependências do projeto
 ## Configuração do Projeto
 - **SPA**: SSR desabilitado (`ssr: false` no `nuxt.config.ts`)
 - **Supabase**: Plugin criado em `app/plugins/supabase.client.js` e acessível globalmente via `useNuxtApp().$supabase`
-- **Variáveis de ambiente**: `.env` com `SUPABASE_URL` e `SUPABASE_KEY` (não versionado)
+- **Variáveis de ambiente**: `.env` com `NUXT_PUBLIC_SUPABASE_URL` e `NUXT_PUBLIC_SUPABASE_KEY` (não versionado)
+- **Runtime Config**: Configurado no `nuxt.config.ts` para expor variáveis públicas do Supabase
 
 ## Autenticação
 - Composable `useAuth.js` em `app/composables` para login com Supabase
