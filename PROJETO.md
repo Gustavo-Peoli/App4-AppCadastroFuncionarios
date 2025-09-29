@@ -19,13 +19,23 @@ package.json       # Dependências do projeto
 - Tailwind CSS (módulo oficial)
 - @headlessui/vue (componentes acessíveis)
 - @heroicons/vue (ícones SVG)
+- @supabase/supabase-js (backend e autenticação)
+
+## Configuração do Projeto
+- **SPA**: SSR desabilitado (`ssr: false` no `nuxt.config.ts`)
+- **Supabase**: Plugin criado em `app/plugins/supabase.client.js` e acessível globalmente via `useNuxtApp().$supabase`
+- **Variáveis de ambiente**: `.env` com `SUPABASE_URL` e `SUPABASE_KEY` (não versionado)
+
+## Autenticação
+- Composable `useAuth.js` em `app/composables` para login com Supabase
+- Login integrado ao formulário de login (`LoginForm.vue`)
 
 ## Sistema de Cores (Tailwind)
 - **primary**: Laranja principal (`#FF8800`)
 - **secondary**: Preto secundário (`#222222`)
-- **background**: Fundo escuro (`#181818`)
+- **background**: Fundo claro padrão (`#F7F9FD`), escuro (`#181818`)
 - **surface**: Superfície de cards (`#242424`)
-- **text**: Texto claro (`#F5F5F5`), muted (`#B3B3B3`), onPrimary (`#181818`)
+- **text**: Texto escuro (`#222222`), muted (`#B3B3B3`), onPrimary (`#F5F5F5`)
 - **accent**: Laranja de destaque (`#FFB300`)
 - **border**: Cor de borda (`#333333`)
 

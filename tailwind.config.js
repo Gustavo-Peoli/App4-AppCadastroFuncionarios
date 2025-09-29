@@ -19,16 +19,17 @@ module.exports = {
           light: '#333333',
         },
         background: {
-          DEFAULT: '#181818', // Fundo escuro
+          DEFAULT: '#F7F9FD', // Fundo claro padrão do projeto
+          dark: '#181818', // Fundo escuro (caso precise)
           light: '#232323',
         },
         surface: {
           DEFAULT: '#242424', // Superfície de cards, etc
         },
         text: {
-          DEFAULT: '#F5F5F5', // Texto claro
+          DEFAULT: '#222222', // Texto escuro para fundo claro
           muted: '#B3B3B3',
-          onPrimary: '#181818',
+          onPrimary: '#F5F5F5',
         },
         accent: {
           DEFAULT: '#FFB300', // Laranja de destaque

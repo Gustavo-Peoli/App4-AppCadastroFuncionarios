@@ -1,7 +1,5 @@
 <template>
 <template>
-  <NuxtLayout>
-    <!-- Página em branco -->
-  </NuxtLayout>
+  <!-- Página em branco -->
 </template>
 </template>
