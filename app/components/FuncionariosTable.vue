@@ -55,6 +55,9 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
               Email
             </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+              Ações
+            </th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-border">
@@ -76,6 +79,14 @@
                 {{ funcionario.email || 'Não informado' }}
               </div>
             </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <AppButton
+                @click="editarFuncionario(funcionario.id)"
+                class="bg-primary hover:bg-accent text-white text-xs px-3 py-1"
+              >
+                Editar
+              </AppButton>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -90,6 +101,11 @@ import AppButton from '~/components/AppButton.vue'
 import type { Funcionario } from '../../types/funcionario'
 
 const { funcionarios, loading, error, buscarFuncionarios } = useFuncionarios()
+
+// Função para navegar para edição
+const editarFuncionario = (id: number) => {
+  navigateTo(`/funcionario/${id}`)
+}
 
 // Buscar funcionários ao montar o componente
 onMounted(async () => {
