@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 
-export default defineNuxtPlugin((nuxtApp) => {
+export default defineNuxtPlugin(async (nuxtApp) => {
   const config = useRuntimeConfig()
   
   console.log('DEBUG - Variáveis de ambiente:')
@@ -20,5 +20,13 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
   
   const supabase = createClient(supabaseUrl, supabaseKey)
+  
+  // Fornecer supabase globalmente
   nuxtApp.provide('supabase', supabase)
+  
+  // Inicializar o estado do usuário no lado do cliente
+  if (process.client) {
+    const { initUser } = useAuth()
+    await initUser()
+  }
 })

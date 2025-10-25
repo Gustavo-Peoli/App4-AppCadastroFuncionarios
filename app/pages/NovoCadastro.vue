@@ -3,7 +3,5 @@
 </template>
 
 <script setup>
-definePageMeta({
-  middleware: 'auth'
-})
+// Página protegida automaticamente pelo middleware global
 </script>

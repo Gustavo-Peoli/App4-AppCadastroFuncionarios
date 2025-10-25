@@ -8,6 +8,13 @@ const error = ref(null)
 
 export function useAuth() {
   const { $supabase } = useNuxtApp()
+  
+  // Função para inicializar o estado do usuário
+  const initUser = async () => {
+    const { data: { user: currentUser } } = await $supabase.auth.getUser()
+    user.value = currentUser
+  }
+  
   // login action
   const login = async (email, password) => {
     loading.value = true
@@ -69,6 +76,46 @@ export function useAuth() {
     loading.value = false
   }
 
+  // register action (criar conta)
+  const register = async (email, password) => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const { data, error: registerError } = await $supabase.auth.signUp({
+        email,
+        password
+      })
+      
+      if (registerError) {
+        // Traduzir mensagens de erro do Supabase
+        switch (registerError.message) {
+          case 'User already registered':
+            error.value = 'Este e-mail já está cadastrado'
+            break
+          case 'Password should be at least 6 characters':
+            error.value = 'A senha deve ter pelo menos 6 caracteres'
+            break
+          case 'Unable to validate email address: invalid format':
+            error.value = 'Formato de e-mail inválido'
+            break
+          default:
+            error.value = 'Erro ao criar conta. Tente novamente'
+        }
+        user.value = null
+      } else {
+        user.value = data.user
+        error.value = null
+      }
+    } catch (err) {
+      error.value = 'Erro de conexão. Verifique sua internet e tente novamente'
+      user.value = null
+    }
+    
+    loading.value = false
+    return { user: user.value, error: error.value }
+  }
+
   // Verificar se há usuário logado ao inicializar
   const checkUser = async () => {
     const { data: { user: currentUser } } = await $supabase.auth.getUser()
@@ -86,6 +133,8 @@ export function useAuth() {
     error,
     login,
     logout,
-    checkUser
+    register,
+    checkUser,
+    initUser
   }
 }

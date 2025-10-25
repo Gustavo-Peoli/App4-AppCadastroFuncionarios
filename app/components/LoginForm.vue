@@ -1,6 +1,6 @@
 
 <template>
-  <div class="w-full max-w-[400px] mx-auto bg-white rounded-xl shadow-lg p-8 mt-24 border border-border text-text">
+  <div class="w-full max-w-[400px] mx-auto bg-white rounded-xl shadow-lg p-8 mt-24 border border-border text-text" style="margin-top: 100px;">
   <div class="flex mb-6 border-b border-border bg-primary/10 rounded-t-xl overflow-hidden">
       <button
         class="flex-1 py-3 text-lg font-semibold focus:outline-none transition border-b-2"
@@ -19,7 +19,7 @@
         Criar Conta
       </button>
     </div>
-    <form @submit.prevent="activeTab === 'login' ? handleLogin() : null">
+    <form @submit.prevent="activeTab === 'login' ? handleLogin() : handleRegister()">
       <div v-if="activeTab === 'login'">
         <h2 class="text-xl font-bold text-center mb-6 text-text">Entre na sua conta</h2>
         <label class="block text-sm font-semibold mb-1 text-text">E-mail</label>
@@ -78,7 +78,19 @@
           placeholder="Confirme sua senha"
           class="mb-6"
         />
-        <AppButton class="w-full bg-gradient-to-r from-primary to-accent text-white shadow-md">Criar Conta</AppButton>
+        <AppButton 
+          type="submit" 
+          class="w-full bg-gradient-to-r from-primary to-accent text-white shadow-md"
+          :disabled="loading"
+        >
+          <span v-if="loading">Criando conta...</span>
+          <span v-else>Criar Conta</span>
+        </AppButton>
+        
+        <!-- Exibir erro de validação ou erro do Supabase -->
+        <div v-if="validationError || error" class="text-red-600 text-sm mt-2 text-center">
+          {{ validationError || error }}
+        </div>
       </div>
     </form>
   </div>
@@ -103,7 +115,7 @@ const register = ref({
   confirmPassword: ''
 })
 
-const { login: loginAction, loading, error } = useAuth()
+const { login: loginAction, register: registerAction, loading, error } = useAuth()
 
 // Estado local para validação
 const validationError = ref('')
@@ -141,6 +153,38 @@ const validateLogin = () => {
   return true
 }
 
+// Função para validar os campos de registro
+const validateRegister = () => {
+  validationError.value = ''
+  
+  if (!register.value.email.trim()) {
+    validationError.value = 'Por favor, digite seu e-mail'
+    return false
+  }
+  
+  if (!isValidEmail(register.value.email)) {
+    validationError.value = 'Por favor, digite um e-mail válido'
+    return false
+  }
+  
+  if (!register.value.password.trim()) {
+    validationError.value = 'Por favor, digite sua senha'
+    return false
+  }
+  
+  if (register.value.password.length < 6) {
+    validationError.value = 'A senha deve ter pelo menos 6 caracteres'
+    return false
+  }
+  
+  if (register.value.password !== register.value.confirmPassword) {
+    validationError.value = 'As senhas não coincidem'
+    return false
+  }
+  
+  return true
+}
+
 const handleLogin = async () => {
   // Limpar erros anteriores
   validationError.value = ''
@@ -156,6 +200,26 @@ const handleLogin = async () => {
   // Se houve sucesso no login, redirecionar para a página inicial
   if (result.user) {
     console.log('Login realizado com sucesso!')
+    await navigateTo('/')
+  }
+}
+
+const handleRegister = async () => {
+  // Limpar erros anteriores
+  validationError.value = ''
+  
+  // Validar campos
+  if (!validateRegister()) {
+    return
+  }
+  
+  // Tentar registrar
+  const result = await registerAction(register.value.email, register.value.password)
+  
+  // Se houve sucesso no registro
+  if (result.user) {
+    console.log('Conta criada com sucesso!')
+    // Pode redirecionar para a página inicial ou mostrar mensagem de confirmação
     await navigateTo('/')
   }
 }
