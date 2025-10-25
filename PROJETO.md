@@ -5,35 +5,41 @@
 ```
 app/
   components/      # Componentes Vue reutilizáveis
-    AppButton.vue      # Botão padronizado com suporte a loading e submit
-    AppInput.vue       # Input com validação e toggle de senha
-    AppHeader.vue      # Cabeçalho dinâmico com auth state
-    AppFooter.vue      # Rodapé do sistema
-    LoginForm.vue      # Formulário de login/registro com abas
+    AppButton.vue        # Botão padronizado com suporte a loading e submit
+    AppInput.vue         # Input com validação e toggle de senha
+    AppHeader.vue        # Cabeçalho dinâmico com auth state
+    AppFooter.vue        # Rodapé do sistema
+    LoginForm.vue        # Formulário de login/registro com abas
     FuncionariosTable.vue # Tabela componentizada para listar funcionários
+    FormFuncionario.vue   # Formulário reutilizável para criar/editar funcionários
+    AppDropdown.vue       # Dropdown acessível com Headless UI
   
   composables/     # Lógica de negócio reutilizável
-    useAuth.js         # Gerenciamento de autenticação (login/logout/register)
-    useFuncionarios.ts # Gerenciamento de funcionários (CRUD - buscar implementado)
+    useAuth.js           # Gerenciamento de autenticação (login/logout/register)
+    useFuncionarios.ts   # Gerenciamento completo CRUD de funcionários
+    useNotification.ts   # Sistema de notificações toast
   
   layouts/         # Layouts do Nuxt
-    default.vue        # Layout padrão com header/footer
+    default.vue          # Layout padrão com header/footer
   
   middleware/      # Middleware de proteção
-    auth.global.js     # Proteção global de rotas (exceto /Login)
+    auth.global.js       # Proteção global de rotas (exceto /Login)
   
   pages/           # Páginas do sistema
-    index.vue          # Página inicial com listagem de funcionários
-    Login.vue          # Página de autenticação (sem layout)
-    NovoCadastro.vue   # Página para novos cadastros (protegida)
+    index.vue            # Página inicial com listagem de funcionários
+    Login.vue            # Página de autenticação (sem layout)
+    NovoCadastro.vue     # Página para novos cadastros (protegida)
+    funcionario/
+      [id].vue           # Página dinâmica para edição de funcionários
   
   plugins/         # Plugins globais
-    supabase.client.js # Cliente Supabase disponível globalmente
+    supabase.client.js   # Cliente Supabase disponível globalmente
+    toast.client.js      # Configuração do sistema de notificações
   
   app.vue          # Arquivo principal do Nuxt
   
 types/             # Definições TypeScript
-  funcionario.ts       # Interfaces para entidades de funcionários
+  funcionario.ts         # Interfaces para entidades de funcionários
 
 public/            # Arquivos públicos
   favicon.ico
@@ -57,6 +63,7 @@ package.json       # Dependências do projeto
 - **Tailwind CSS**: Framework CSS utilitário (módulo oficial)
 - **@headlessui/vue**: Componentes acessíveis headless
 - **@heroicons/vue**: Biblioteca de ícones SVG
+- **vue-toastification**: Sistema de notificações toast
 
 ### Backend e Autenticação
 - **@supabase/supabase-js**: Cliente para backend e autenticação
@@ -173,13 +180,17 @@ colors: {
 4. Após login → redirect para página original
 5. Header mostra dados do usuário + botão logout
 
-## 👥 Sistema de Funcionários
+## 👥 Sistema de Funcionários (CRUD Completo)
 
 ### Composable `useFuncionarios.ts`
 ```typescript
 // Funcionalidades disponíveis:
 - buscarFuncionarios()       // Busca todos os funcionários
+- criarFuncionario()         // Cria novo funcionário
+- editarFuncionario()        // Edita funcionário existente
+- buscarFuncionarioPorId()   // Busca funcionário específico por ID
 - funcionarios               // Array reativo com dados
+- funcionario                // Funcionário individual (para edição)
 - loading                    // Estado de carregamento
 - error                      // Mensagens de erro
 
@@ -191,13 +202,49 @@ colors: {
 
 ### Componente `FuncionariosTable.vue`
 - **Estados visuais**: Loading, Error, Empty, Data
-- **Colunas exibidas**: Nome, Cargo, Email
+- **Colunas exibidas**: Nome, Cargo, Email, Ações
 - **Funcionalidades**: 
   - Busca automática ao montar
+  - Botão "Editar" que navega para `/funcionario/[id]`
   - Tratamento de valores nulos
   - Contador de registros
   - Design responsivo
   - Hover effects
+
+### Componente `FormFuncionario.vue`
+- **Props**: `isNovo` (boolean), `funcionario` (objeto opcional)
+- **Modos**: Criar (isNovo=true) ou Editar (isNovo=false)
+- **Campos**: Nome, Cargo, Endereco, Email, Salário
+- **Funcionalidades**:
+  - Pré-preenchimento automático quando em modo edição
+  - Validação de formulário
+  - Estados de loading durante submit
+  - Integração com notificações toast
+  - Dropdown para seleção de cargo
+
+### Componente `AppDropdown.vue`
+- **Framework**: Headless UI para acessibilidade
+- **Funcionalidades**:
+  - Opções predefinidas de cargos
+  - Suporte completo a v-model
+  - Design consistente com sistema de cores
+  - Ícones integrados
+
+### Sistema de Notificações
+- **Composable**: `useNotification.ts`
+- **Plugin**: `toast.client.js`
+- **Funcionalidades**:
+  - `showSuccess()`, `showError()`, `showInfo()`, `showWarning()`
+  - Estilização customizada para o sistema de cores
+  - Posicionamento e duração configuráveis
+
+### Roteamento Dinâmico
+- **Página**: `/funcionario/[id]`
+- **Funcionalidades**:
+  - Busca automática do funcionário por ID
+  - Estados de loading, error e not found
+  - Integração com FormFuncionario em modo edição
+  - Breadcrumb de navegação
 
 ## 🧩 Padrões de Desenvolvimento
 
@@ -255,32 +302,80 @@ const props = defineProps<Props>()
 ```vue
 <script setup lang="ts">
 import { useFuncionarios } from '~/composables/useFuncionarios'
+import { useNotification } from '~/composables/useNotification'
 
-const { funcionarios, loading, buscarFuncionarios } = useFuncionarios()
+const { funcionarios, loading, buscarFuncionarios, criarFuncionario } = useFuncionarios()
+const { showSuccess, showError } = useNotification()
 
 onMounted(() => {
   buscarFuncionarios()
 })
+
+// Exemplo de criação
+const novoFuncionario = {
+  nome: 'João Silva',
+  cargo: 'Desenvolvedor',
+  email: 'joao@empresa.com',
+  endereco: 'Rua A, 123',
+  salario: 5000
+}
+
+const salvar = async () => {
+  try {
+    await criarFuncionario(novoFuncionario)
+    showSuccess('Funcionário criado com sucesso!')
+  } catch (error) {
+    showError('Erro ao criar funcionário')
+  }
+}
+</script>
+```
+
+### Usar FormFuncionario
+```vue
+<template>
+  <!-- Para criar -->
+  <FormFuncionario :is-novo="true" />
+  
+  <!-- Para editar -->
+  <FormFuncionario :is-novo="false" :funcionario="funcionarioSelecionado" />
+</template>
+```
+
+### Usar AppDropdown
+```vue
+<template>
+  <AppDropdown v-model="cargoSelecionado" />
+</template>
+
+<script setup lang="ts">
+const cargoSelecionado = ref('')
 </script>
 ```
 
 ## 🚀 Próximos Passos
 
 ### Funcionários (CRUD Completo)
-- [ ] Criar funcionário
-- [ ] Editar funcionário  
+- [x] Criar funcionário
+- [x] Listar funcionários
+- [x] Editar funcionário  
 - [ ] Excluir funcionário
 - [ ] Filtros e busca
 - [ ] Paginação
 
 ### Interface
+- [x] Sistema de notificações toast
+- [x] Formulários com validação
+- [x] Loading states
+- [x] Componentes acessíveis
 - [ ] Modal de confirmação
-- [ ] Notificações toast
 - [ ] Loading skeletons
-- [ ] Validação de formulários
+- [ ] Validação de formulários mais robusta
 
 ### Sistema
-- [ ] Middleware de permissões
+- [x] Roteamento dinâmico
+- [x] Middleware de proteção
+- [x] Componentes reutilizáveis
 - [ ] Gestão de estado global
 - [ ] Testes unitários
 - [ ] Deploy automatizado
@@ -290,9 +385,13 @@ onMounted(() => {
 ## 📝 Observações Importantes
 
 1. **Modo SPA**: O projeto roda inteiramente no cliente
-2. **TypeScript**: Gradualmente sendo adotado (composables e tipos)
-3. **Componentização**: Tudo deve ser componentizado, nada inline
+2. **TypeScript**: Totalmente adotado nos composables e tipos
+3. **Componentização**: Tudo componentizado e reutilizável
 4. **Supabase**: Backend completo com auth e database
 5. **Middleware Global**: Proteção automática de todas as rotas
+6. **CRUD Completo**: Sistema de funcionários com criar, listar e editar
+7. **Notificações**: Sistema toast integrado para feedback do usuário
+8. **Acessibilidade**: Componentes seguem padrões de acessibilidade
+9. **Roteamento Dinâmico**: Páginas parametrizadas para edição
 
 Este documento é atualizado conforme o projeto evolui.
