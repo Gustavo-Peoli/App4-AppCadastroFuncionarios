@@ -13,6 +13,7 @@ app/
     FuncionariosTable.vue # Tabela componentizada para listar funcionários
     FormFuncionario.vue   # Formulário reutilizável para criar/editar funcionários
     AppDropdown.vue       # Dropdown acessível com Headless UI
+    AppModal.vue          # Modal reutilizável com Headless UI
   
   composables/     # Lógica de negócio reutilizável
     useAuth.js           # Gerenciamento de autenticação (login/logout/register)
@@ -188,6 +189,7 @@ colors: {
 - buscarFuncionarios()       // Busca todos os funcionários
 - criarFuncionario()         // Cria novo funcionário
 - editarFuncionario()        // Edita funcionário existente
+- deletarFuncionario()       // Deleta funcionário por ID
 - buscarFuncionarioPorId()   // Busca funcionário específico por ID
 - funcionarios               // Array reativo com dados
 - funcionario                // Funcionário individual (para edição)
@@ -206,6 +208,7 @@ colors: {
 - **Funcionalidades**: 
   - Busca automática ao montar
   - Botão "Editar" que navega para `/funcionario/[id]`
+  - Botão "Deletar" com modal de confirmação
   - Tratamento de valores nulos
   - Contador de registros
   - Design responsivo
@@ -245,6 +248,17 @@ colors: {
   - Estados de loading, error e not found
   - Integração com FormFuncionario em modo edição
   - Breadcrumb de navegação
+
+### Componente `AppModal.vue`
+- **Framework**: Headless UI para acessibilidade
+- **Funcionalidades**:
+  - Modal reutilizável com props configuráveis
+  - Transições suaves (`TransitionRoot` e `TransitionChild`)
+  - Props: `isOpen`, `title`, `message`, `confirmText`, `cancelText`
+  - Variantes de confirmação: `primary`, `secondary`, `danger`
+  - Estados de loading durante operações
+  - Integração com sistema de cores do projeto
+  - Eventos: `@close`, `@confirm`
 
 ## 🧩 Padrões de Desenvolvimento
 
@@ -342,14 +356,29 @@ const salvar = async () => {
 </template>
 ```
 
-### Usar AppDropdown
+### Usar AppModal
 ```vue
 <template>
-  <AppDropdown v-model="cargoSelecionado" />
+  <AppModal
+    :is-open="showModal"
+    title="Confirmar Exclusão"
+    message="Tem certeza que deseja deletar este funcionário?"
+    confirm-text="Deletar"
+    cancel-text="Cancelar"
+    confirm-variant="danger"
+    :loading="loading"
+    @close="showModal = false"
+    @confirm="handleDelete"
+  />
 </template>
 
 <script setup lang="ts">
-const cargoSelecionado = ref('')
+const showModal = ref(false)
+const loading = ref(false)
+
+const handleDelete = () => {
+  // Lógica de exclusão
+}
 </script>
 ```
 
@@ -359,7 +388,7 @@ const cargoSelecionado = ref('')
 - [x] Criar funcionário
 - [x] Listar funcionários
 - [x] Editar funcionário  
-- [ ] Excluir funcionário
+- [x] Excluir funcionário
 - [ ] Filtros e busca
 - [ ] Paginação
 
@@ -368,7 +397,7 @@ const cargoSelecionado = ref('')
 - [x] Formulários com validação
 - [x] Loading states
 - [x] Componentes acessíveis
-- [ ] Modal de confirmação
+- [x] Modal de confirmação
 - [ ] Loading skeletons
 - [ ] Validação de formulários mais robusta
 
@@ -389,9 +418,11 @@ const cargoSelecionado = ref('')
 3. **Componentização**: Tudo componentizado e reutilizável
 4. **Supabase**: Backend completo com auth e database
 5. **Middleware Global**: Proteção automática de todas as rotas
-6. **CRUD Completo**: Sistema de funcionários com criar, listar e editar
+6. **CRUD Completo**: Sistema de funcionários com criar, listar, editar e deletar
 7. **Notificações**: Sistema toast integrado para feedback do usuário
-8. **Acessibilidade**: Componentes seguem padrões de acessibilidade
+8. **Acessibilidade**: Componentes seguem padrões de acessibilidade com Headless UI
 9. **Roteamento Dinâmico**: Páginas parametrizadas para edição
+10. **Modais**: Sistema de modais reutilizáveis para confirmações
+11. **GitHub**: Projeto versionado e sincronizado em https://github.com/Gustavo-Peoli/App4-AppCadastroFuncionarios
 
 Este documento é atualizado conforme o projeto evolui.
