@@ -80,31 +80,97 @@
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <AppButton
-                @click="editarFuncionario(funcionario.id)"
-                class="bg-primary hover:bg-accent text-white text-xs px-3 py-1"
-              >
-                Editar
-              </AppButton>
+              <div class="flex gap-2">
+                <AppButton
+                  @click="editarFuncionario(funcionario.id)"
+                  variant="primary"
+                  class="text-xs px-3 py-1"
+                >
+                  Editar
+                </AppButton>
+                <AppButton
+                  @click="confirmarDelete(funcionario)"
+                  variant="danger"
+                  class="text-xs px-3 py-1"
+                >
+                  Deletar
+                </AppButton>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+
+  <!-- Modal de Confirmação -->
+  <AppModal
+    :is-open="showDeleteModal"
+    :title="'Confirmar Exclusão'"
+    :message="`Tem certeza que deseja deletar o funcionário ${funcionarioParaDelatar?.nome}? Esta ação não pode ser desfeita.`"
+    confirm-text="Deletar"
+    cancel-text="Cancelar"
+    confirm-variant="danger"
+    :loading="loadingDelete"
+    @close="cancelarDelete"
+    @confirm="executarDelete"
+  />
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useFuncionarios } from '~/composables/useFuncionarios'
+import { useNotification } from '~/composables/useNotification'
 import AppButton from '~/components/AppButton.vue'
+import AppModal from '~/components/AppModal.vue'
 import type { Funcionario } from '../../types/funcionario'
 
-const { funcionarios, loading, error, buscarFuncionarios } = useFuncionarios()
+const { funcionarios, loading, error, buscarFuncionarios, deletarFuncionario } = useFuncionarios()
+const { showSuccess, showError } = useNotification()
+
+// Estados do modal de confirmação
+const showDeleteModal = ref(false)
+const funcionarioParaDelatar = ref<Funcionario | null>(null)
+const loadingDelete = ref(false)
 
 // Função para navegar para edição
 const editarFuncionario = (id: number) => {
   navigateTo(`/funcionario/${id}`)
+}
+
+// Função para abrir modal de confirmação de exclusão
+const confirmarDelete = (funcionario: Funcionario) => {
+  funcionarioParaDelatar.value = funcionario
+  showDeleteModal.value = true
+}
+
+// Função para cancelar a exclusão
+const cancelarDelete = () => {
+  showDeleteModal.value = false
+  funcionarioParaDelatar.value = null
+}
+
+// Função para executar a exclusão
+const executarDelete = async () => {
+  if (!funcionarioParaDelatar.value) return
+  
+  loadingDelete.value = true
+  
+  try {
+    const resultado = await deletarFuncionario(funcionarioParaDelatar.value.id)
+    
+    if (resultado.success) {
+      showSuccess(`Funcionário ${funcionarioParaDelatar.value.nome} foi deletado com sucesso!`)
+      showDeleteModal.value = false
+      funcionarioParaDelatar.value = null
+    } else {
+      showError(resultado.error || 'Erro ao deletar funcionário')
+    }
+  } catch (err) {
+    showError('Erro inesperado ao deletar funcionário')
+  } finally {
+    loadingDelete.value = false
+  }
 }
 
 // Buscar funcionários ao montar o componente

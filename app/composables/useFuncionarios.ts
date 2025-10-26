@@ -154,12 +154,47 @@ export function useFuncionarios() {
     }
   }
 
+  // Deletar funcionário
+  const deletarFuncionario = async (id: number) => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const { error: deleteError } = await $supabase
+        .from('funcionarios')
+        .delete()
+        .eq('id', id)
+      
+      if (deleteError) {
+        switch (deleteError.code) {
+          case '42P01': // Undefined table (caso não exista)
+            error.value = 'Funcionário não encontrado'
+            break
+          default:
+            error.value = 'Erro ao deletar funcionário. Tente novamente'
+        }
+        return { success: false, error: error.value }
+      } else {
+        // Remover o funcionário da lista local
+        funcionarios.value = funcionarios.value.filter(f => f.id !== id)
+        error.value = null
+        return { success: true, error: null }
+      }
+    } catch (err) {
+      error.value = 'Erro de conexão. Verifique sua internet e tente novamente'
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     funcionarios,
     loading,
     error,
     buscarFuncionarios,
     criarFuncionario,
-    editarFuncionario
+    editarFuncionario,
+    deletarFuncionario
   }
 }
